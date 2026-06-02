@@ -1,13 +1,11 @@
-package com.example.demo.features.order;
+package com.example.demo.features.order.entity;
 
-import com.example.demo.features.product.Product;
+import com.example.demo.common.BaseEntity;
+import com.example.demo.features.product.entity.Product;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -18,10 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * A single line of a simulated order. Bulk-seeded to feed the heavy
- * "trending products" analytics query (aggregation over order volume).
- */
 @Entity
 @Table(name = "order_items")
 @Getter
@@ -29,12 +23,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = "product")
-public class OrderItem {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@ToString(callSuper = true, exclude = "product")
+public class OrderItem extends BaseEntity {
 
     /**
      * Product this line refers to. LAZY so the analytics aggregation works off

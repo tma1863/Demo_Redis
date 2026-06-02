@@ -1,17 +1,15 @@
-package com.example.demo.features.category;
+package com.example.demo.features.category.entity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.demo.features.product.Product;
+import com.example.demo.common.BaseEntity;
+import com.example.demo.features.product.entity.Product;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -31,12 +29,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = "products")
-public class Category {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@ToString(callSuper = true, exclude = "products")
+public class Category extends BaseEntity {
 
     @Column(nullable = false)
     private String name;
