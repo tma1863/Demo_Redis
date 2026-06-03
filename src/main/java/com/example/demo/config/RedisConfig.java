@@ -33,7 +33,17 @@ public class RedisConfig {
     /** Cache bucket for the trending-products analytics result. */
     public static final String TRENDING_PRODUCTS_CACHE = "trending-products";
 
+    /** Cache bucket for single-product detail reads (Battleground 3). */
+    public static final String PRODUCTS_CACHE = "products";
+
     private static final Duration TRENDING_PRODUCTS_TTL = Duration.ofMinutes(5);
+
+    /**
+     * Longer TTL than the analytics bucket: a product's detail changes rarely,
+     * and the battleground is about keeping a hot id resident in Redis so the
+     * concurrent-read spike is answered without touching PostgreSQL.
+     */
+    private static final Duration PRODUCTS_TTL = Duration.ofMinutes(10);
 
     @Bean
     RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -42,10 +52,12 @@ public class RedisConfig {
                 .serializeValuesWith(SerializationPair.fromSerializer(cacheValueSerializer()));
 
         RedisCacheConfiguration trendingProducts = defaults.entryTtl(TRENDING_PRODUCTS_TTL);
+        RedisCacheConfiguration products = defaults.entryTtl(PRODUCTS_TTL);
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaults)
                 .withCacheConfiguration(TRENDING_PRODUCTS_CACHE, trendingProducts)
+                .withCacheConfiguration(PRODUCTS_CACHE, products)
                 .build();
     }
 
