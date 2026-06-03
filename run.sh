@@ -18,3 +18,6 @@ else
 fi
 
 # ./run.sh
+# export $(grep -v '^#' .env | xargs)     # loads REDIS_PASSWORD, REDIS_PORT, etc.
+# docker exec ecom_redis_cache redis-cli -a "$REDIS_PASSWORD" --no-auth-warning DEL "trending-products::getTrendingProducts"
+
