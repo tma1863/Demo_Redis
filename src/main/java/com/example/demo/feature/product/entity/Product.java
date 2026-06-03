@@ -1,9 +1,9 @@
-package com.example.demo.features.product.entity;
+package com.example.demo.feature.product.entity;
 
 import java.math.BigDecimal;
 
 import com.example.demo.common.BaseEntity;
-import com.example.demo.features.category.entity.Category;
+import com.example.demo.feature.category.entity.Category;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,9 +1,9 @@
-package com.example.demo.features.product.repository;
+package com.example.demo.feature.product.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import com.example.demo.features.product.entity.Product;
+import com.example.demo.feature.product.entity.Product;
 
 /**
  * Standard CRUD for {@link Product}. {@link JpaSpecificationExecutor} is wired in

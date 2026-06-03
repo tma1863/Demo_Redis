@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 
-import com.example.demo.features.product.dto.TrendingProductResponse;
+import com.example.demo.feature.product.dto.TrendingProductResponse;
 
 /**
  * Guards the one subtle decision in {@link RedisConfig}: the JSON cache

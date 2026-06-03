@@ -1,4 +1,4 @@
-package com.example.demo.features.order.repository;
+package com.example.demo.feature.order.repository;
 
 import java.util.List;
 
@@ -6,8 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.example.demo.features.order.entity.OrderItem;
-import com.example.demo.features.product.dto.TrendingProductResponse;
+import com.example.demo.feature.order.entity.OrderItem;
+import com.example.demo.feature.product.dto.TrendingProductResponse;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
@@ -21,7 +21,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
      * Call with {@code PageRequest.of(0, 10)} for the top 10.
      */
     @Query("""
-            SELECT new com.example.demo.features.product.dto.TrendingProductResponse(
+            SELECT new com.example.demo.feature.product.dto.TrendingProductResponse(
                        p.id, p.name, p.price, SUM(oi.quantity))
             FROM OrderItem oi
             JOIN oi.product p

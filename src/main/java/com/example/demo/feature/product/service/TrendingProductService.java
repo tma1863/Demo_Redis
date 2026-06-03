@@ -1,4 +1,4 @@
-package com.example.demo.features.product.service;
+package com.example.demo.feature.product.service;
 
 import java.util.List;
 
@@ -7,8 +7,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.config.RedisConfig;
-import com.example.demo.features.order.repository.OrderItemRepository;
-import com.example.demo.features.product.dto.TrendingProductResponse;
+import com.example.demo.feature.order.repository.OrderItemRepository;
+import com.example.demo.feature.product.dto.TrendingProductResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

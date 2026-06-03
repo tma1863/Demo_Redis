@@ -1,7 +1,7 @@
-package com.example.demo.features.order.entity;
+package com.example.demo.feature.order.entity;
 
 import com.example.demo.common.BaseEntity;
-import com.example.demo.features.product.entity.Product;
+import com.example.demo.feature.product.entity.Product;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

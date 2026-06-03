@@ -11,12 +11,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.demo.features.category.entity.Category;
-import com.example.demo.features.category.repository.CategoryRepository;
-import com.example.demo.features.order.entity.OrderItem;
-import com.example.demo.features.order.repository.OrderItemRepository;
-import com.example.demo.features.product.entity.Product;
-import com.example.demo.features.product.repository.ProductRepository;
+import com.example.demo.feature.category.entity.Category;
+import com.example.demo.feature.category.repository.CategoryRepository;
+import com.example.demo.feature.order.entity.OrderItem;
+import com.example.demo.feature.order.repository.OrderItemRepository;
+import com.example.demo.feature.product.entity.Product;
+import com.example.demo.feature.product.repository.ProductRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

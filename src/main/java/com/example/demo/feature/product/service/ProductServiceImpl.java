@@ -1,12 +1,12 @@
-package com.example.demo.features.product.service;
+package com.example.demo.feature.product.service;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.common.exception.ResourceNotFoundException;
 import com.example.demo.config.RedisConfig;
-import com.example.demo.features.product.dto.ProductResponse;
-import com.example.demo.features.product.repository.ProductRepository;
+import com.example.demo.feature.product.dto.ProductResponse;
+import com.example.demo.feature.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

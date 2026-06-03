@@ -1,8 +1,8 @@
-package com.example.demo.features.product.dto;
+package com.example.demo.feature.product.dto;
 
 import java.math.BigDecimal;
 
-import com.example.demo.features.product.entity.Product;
+import com.example.demo.feature.product.entity.Product;
 
 /**
  * Read-only, flat projection of a single {@link Product} for the

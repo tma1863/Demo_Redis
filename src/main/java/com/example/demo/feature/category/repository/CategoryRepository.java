@@ -1,8 +1,8 @@
-package com.example.demo.features.category.repository;
+package com.example.demo.feature.category.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.demo.features.category.entity.Category;
+import com.example.demo.feature.category.entity.Category;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 }

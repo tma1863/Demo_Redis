@@ -1,4 +1,4 @@
-package com.example.demo.features.product;
+package com.example.demo.feature.product;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,9 +23,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.example.demo.common.bootstrap.DataSeeder;
 import com.example.demo.config.RedisConfig;
-import com.example.demo.features.category.entity.Category;
-import com.example.demo.features.product.entity.Product;
-import com.example.demo.features.product.repository.ProductRepository;
+import com.example.demo.feature.category.entity.Category;
+import com.example.demo.feature.product.entity.Product;
+import com.example.demo.feature.product.repository.ProductRepository;
 
 /**
  * Automated proof for Battleground 3: the cold read for a product id hits
