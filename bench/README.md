@@ -22,9 +22,11 @@ release, zero runtime deps, runs on this project's Linux/WSL2 x86_64 host.
 ./bench/run-benchmark.sh          # 2) prime the cache, then spike it
 ```
 
-The script auto-derives the port from `.env` (`SERVER_PORT`), auto-discovers a
-real product id via `/api/products/trending`, prints the cold-vs-warm
-single-request latency, then fires the spike.
+The script auto-derives the port from `.env` (`SERVER_PORT`), reads the **#1
+trending product id** from `/api/products/trending` (`data[0].productId`),
+prints the cold-vs-warm single-request latency, then fires the spike. The id is
+not configurable — that keeps the benchmark from being pointed at a
+non-existent id (e.g. `1`, which is a Category, not a Product, and 404s).
 
 ### Knobs (env vars)
 
@@ -34,12 +36,13 @@ single-request latency, then fires the spike.
 | `REQUESTS`   | `1000000`   | total requests (when `DURATION` is empty)         |
 | `DURATION`   | _(unset)_   | e.g. `20s` — run time-based instead of count-based |
 | `TIMEOUT`    | `10s`       | per-request timeout                               |
-| `PRODUCT_ID` | auto        | force a specific id                               |
 | `BASE_URL`   | from `.env` | override `http://host:port`                       |
 
+The target id is always the #1 trending product, so there is no knob for it.
+
 ```bash
-# 2,000 connections for 30 seconds against a chosen id:
-CONNS=2000 DURATION=30s PRODUCT_ID=42 ./bench/run-benchmark.sh
+# 2,000 connections for 30 seconds against the #1 trending product:
+CONNS=2000 DURATION=30s ./bench/run-benchmark.sh
 ```
 
 ## What "Redis wins" looks like
