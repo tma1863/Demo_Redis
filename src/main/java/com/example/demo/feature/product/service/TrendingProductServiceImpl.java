@@ -41,6 +41,8 @@ public class TrendingProductServiceImpl implements TrendingProductService {
      * keyed under the {@code trending-products} bucket.
      */
     @Override
+    // sync intentionally OFF: a 5-min analytics result tolerates a brief cold stampede, and a sync lock would serialize warm reads and skew the benchmark.
+    // Parameterless by design → this bucket holds exactly one entry; if a limit param is ever added, change key to "#limit" so entries vary by argument.
     @Cacheable(cacheNames = CacheNames.TRENDING_PRODUCTS, key = "#root.methodName")
     public List<TrendingProductResponse> getTrendingProducts() {
         log.info("Cache miss — aggregating top {} trending products from PostgreSQL", TRENDING_LIMIT);

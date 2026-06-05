@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+/** Mapped superclass providing the shared pooled-SEQUENCE primary key for all entities. */
 @MappedSuperclass
 @Getter
 @Setter

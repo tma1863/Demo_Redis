@@ -19,6 +19,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
     @Override
+    // sync=true is THE Battleground-3 mechanism: under a concurrent cold miss only one thread loads from PostgreSQL (no thundering herd).
     @Cacheable(cacheNames = CacheNames.PRODUCTS, key = "#id", sync = true)
     public ProductResponse getProductById(Long id) {
         log.info("Cache miss — loading product {} from PostgreSQL", id);

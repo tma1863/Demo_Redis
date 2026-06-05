@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/** A single product line within an order — the fact table the trending aggregation sums over. */
 @Entity
 @Table(name = "order_items")
 @Getter
