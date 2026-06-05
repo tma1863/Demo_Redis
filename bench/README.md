@@ -24,9 +24,11 @@ release, zero runtime deps, runs on this project's Linux/WSL2 x86_64 host.
 
 The script auto-derives the port from `.env` (`SERVER_PORT`), reads the **#1
 trending product id** from `/api/products/trending` (`data[0].productId`),
-prints the cold-vs-warm single-request latency, then fires the spike. The id is
-not configurable — that keeps the benchmark from being pointed at a
-non-existent id (e.g. `1`, which is a Category, not a Product, and 404s).
+prints the cold-vs-warm single-request latency, then fires the spike. By default
+the id is **auto-discovered**, not hard-coded, so the benchmark is never pointed
+at a non-existent id — e.g. `1`, which is a Category, not a Product, and 404s. If
+discovery fails, set `PRODUCT_ID=<id>` explicitly (the script prints this hint on
+failure).
 
 ### Knobs (env vars)
 
@@ -37,8 +39,10 @@ non-existent id (e.g. `1`, which is a Category, not a Product, and 404s).
 | `DURATION`   | _(unset)_   | e.g. `20s` — run time-based instead of count-based |
 | `TIMEOUT`    | `10s`       | per-request timeout                               |
 | `BASE_URL`   | from `.env` | override `http://host:port`                       |
+| `PRODUCT_ID` | _(auto)_    | explicit product id; used as a fallback when auto-discovery fails |
 
-The target id is always the #1 trending product, so there is no knob for it.
+By default the target is the #1 trending product, auto-discovered at startup;
+override it only if discovery fails, via `PRODUCT_ID=<id>`.
 
 ```bash
 # 2,000 connections for 30 seconds against the #1 trending product:

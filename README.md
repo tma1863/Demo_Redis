@@ -1,12 +1,19 @@
 # System Architecture — Redis-Cached Trending Products
 
 This document visualizes the demo system: a Spring Boot 4 / Java 21 web app that
-serves a **"trending products"** analytics endpoint, backed by **PostgreSQL**
-(source of truth) and accelerated by **Redis** (cache-aside layer).
+serves two **cache-aside** read paths, backed by **PostgreSQL** (source of
+truth) and accelerated by **Redis** (cache layer):
 
-The single read path — `GET /api/products/trending` — is deliberately expensive
-on a cold call (a `SUM`/`GROUP BY` over 50,000 `order_items`) so the win from
-caching it in Redis is easy to observe.
+* `GET /api/products/trending` — *trending-products analytics*, deliberately
+  expensive on a cold call (a `SUM`/`GROUP BY` over 50,000 `order_items`) so the
+  win from caching it in Redis is easy to observe.
+* `GET /api/products/{id}` — *high-concurrency product-detail read*, kept warm in
+  Redis so a flood of concurrent reads is answered without borrowing a
+  PostgreSQL connection (the load-test target — see the product-detail section
+  below and [bench/README.md](bench/README.md)).
+
+> A third "advanced filtering" path is referenced in the code (`ProductRepository`
+> wires in `JpaSpecificationExecutor`) but is **not yet implemented**.
 
 ---
 
@@ -14,7 +21,7 @@ caching it in Redis is easy to observe.
 
 How the running pieces fit together. The Spring Boot app talks to two
 Docker-managed backing services. Host ports differ from container ports (see
-[CLAUDE.md](../CLAUDE.md) and the env-var notes) to avoid clashes with other
+[CLAUDE.md](CLAUDE.md) and the env-var notes) to avoid clashes with other
 local stacks.
 
 ```mermaid
@@ -54,21 +61,21 @@ flowchart LR
 
 ## 2. Application layering (packages → responsibilities)
 
-The codebase is split into a **feature-sliced** domain (`features/*`) plus a
+The codebase is split into a **feature-sliced** domain (`feature/*`) plus a
 shared `common/*` layer and an infrastructure `config/*` layer. Caching plumbing
 is kept out of the domain code.
 
 ```mermaid
 flowchart TD
-    subgraph web["features.product.controller"]
+    subgraph web["feature.product.controller"]
         PC["ProductController<br/>GET /api/products/trending"]
     end
 
-    subgraph service["features.product.service"]
+    subgraph service["feature.product.service"]
         TPS["TrendingProductService<br/>@Cacheable('trending-products')"]
     end
 
-    subgraph data["features.*.repository (Spring Data JPA)"]
+    subgraph data["feature.*.repository (Spring Data JPA)"]
         OIR["OrderItemRepository<br/>findTopTrending(Pageable)"]
         PR["ProductRepository"]
         CR["CategoryRepository"]
@@ -145,7 +152,7 @@ sequenceDiagram
 |-----------------|-------------------------------------------------------------------------|
 | Cache bucket    | `trending-products` (`RedisConfig.TRENDING_PRODUCTS_CACHE`)             |
 | Redis key       | `trending-products::getTrendingProducts` (`key = "#root.methodName"`)   |
-| TTL             | 5 minutes (`RedisConfig.TRENDING_PRODUCTS_TTL`)                         |
+| TTL             | 5 minutes (configured in `RedisConfig`)                                |
 | Value format    | JSON via `GenericJacksonJsonRedisSerializer` (Jackson 3, default typing)|
 | Why default typing | so `List<TrendingProductResponse>` round-trips to its concrete type, not `LinkedHashMap` |
 
@@ -210,15 +217,74 @@ flowchart LR
 
 ---
 
+## 6. Second battleground — high-concurrency product-detail reads
+
+A different shape of cache win: not an expensive aggregation, but a *hot key*.
+`GET /api/products/{id}` is served by `ProductService.getProductById`, annotated
+`@Cacheable(cacheNames = "products", sync = true)`. Once an id is warm, a flood
+of concurrent reads is answered entirely from Redis and the PostgreSQL
+connection pool stays idle.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Clients<br/>(1000s, concurrent)
+    participant API as ProductController
+    participant Aspect as Spring Cache Aspect<br/>(sync = true)
+    participant R as Redis<br/>(products)
+    participant S as ProductService
+    participant DB as PostgreSQL
+
+    C->>API: GET /api/products/{id}
+    API->>Aspect: getProductById(id)
+    Aspect->>R: GET "products::{id}"
+
+    alt Cache HIT (warm — the spike)
+        R-->>Aspect: cached JSON
+        Aspect-->>API: ProductResponse (no DB query)
+    else Cache MISS (cold — first request only)
+        Note over Aspect,DB: sync=true → a per-key lock admits ONE loader;<br/>concurrent callers block, then read the fresh value
+        Aspect->>S: invoke method body (single thread)
+        S->>DB: select … from products where id = ?
+        DB-->>S: row → ProductResponse
+        S-->>Aspect: result
+        Aspect->>R: SET "products::{id}" = JSON, TTL = 10 min
+        Aspect-->>API: result
+    end
+
+    API-->>C: 200 OK · ApiResponse<ProductResponse>
+```
+
+**Key (cache layout in Redis):**
+
+| Property        | Value                                                                   |
+|-----------------|-------------------------------------------------------------------------|
+| Cache bucket    | `products` (`RedisConfig.PRODUCTS_CACHE`)                               |
+| Redis key       | `products::{id}` (`key = "#id"`)                                        |
+| TTL             | 10 minutes (configured in `RedisConfig`)                               |
+| Stampede guard  | `@Cacheable(sync = true)` — one loader per key on a cold miss          |
+| Value format    | `ProductResponse` record as JSON (same Jackson-3 serializer as above)  |
+
+The dangerous case is a *cold spike*: thousands of simultaneous requests for an
+id that is **not** yet cached. Without `sync = true` they would all stampede the
+connection pool; with it, exactly one thread loads from PostgreSQL while the rest
+block briefly and then read the freshly-cached value. The
+[bench harness](bench/README.md) drives this scenario with Bombardier.
+
+---
+
 ### Component reference
 
-| Concern              | Type / file                                                                 |
-|----------------------|------------------------------------------------------------------------------|
-| HTTP endpoint        | [ProductController](../src/main/java/com/example/demo/features/product/controller/ProductController.java) |
-| Cached read logic    | [TrendingProductService](../src/main/java/com/example/demo/features/product/service/TrendingProductService.java) |
-| Aggregation query    | [OrderItemRepository](../src/main/java/com/example/demo/features/order/repository/OrderItemRepository.java) |
-| Response projection  | [TrendingProductResponse](../src/main/java/com/example/demo/features/product/dto/TrendingProductResponse.java) |
-| Redis cache wiring   | [RedisConfig](../src/main/java/com/example/demo/config/RedisConfig.java)     |
-| Response envelope    | [ApiResponse](../src/main/java/com/example/demo/common/api/ApiResponse.java) |
-| Benchmark data       | [DataSeeder](../src/main/java/com/example/demo/common/bootstrap/DataSeeder.java) |
-| Backing services     | [docker-compose.yml](../docker-compose.yml) (Postgres 17, Redis 8)           |
+| Concern               | Type / file                                                                 |
+|-----------------------|------------------------------------------------------------------------------|
+| HTTP endpoint         | [ProductController](src/main/java/com/example/demo/feature/product/controller/ProductController.java) |
+| Trending read logic   | [TrendingProductService](src/main/java/com/example/demo/feature/product/service/TrendingProductService.java) |
+| Aggregation query     | [OrderItemRepository](src/main/java/com/example/demo/feature/order/repository/OrderItemRepository.java) |
+| Trending projection   | [TrendingProductResponse](src/main/java/com/example/demo/feature/product/dto/TrendingProductResponse.java) |
+| Product-detail read   | [ProductService](src/main/java/com/example/demo/feature/product/service/ProductService.java) (+ `ProductServiceImpl`) |
+| Product CRUD          | [ProductRepository](src/main/java/com/example/demo/feature/product/repository/ProductRepository.java) |
+| Detail projection     | [ProductResponse](src/main/java/com/example/demo/feature/product/dto/ProductResponse.java) |
+| Redis cache wiring    | [RedisConfig](src/main/java/com/example/demo/config/RedisConfig.java)        |
+| Response envelope     | [ApiResponse](src/main/java/com/example/demo/common/api/ApiResponse.java)    |
+| Benchmark data        | [DataSeeder](src/main/java/com/example/demo/common/bootstrap/DataSeeder.java) |
+| Backing services      | [docker-compose.yml](docker-compose.yml) (Postgres 17, Redis 8)              |
