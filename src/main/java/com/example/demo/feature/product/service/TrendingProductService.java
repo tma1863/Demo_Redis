@@ -6,7 +6,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.config.RedisConfig;
+import com.example.demo.common.cache.CacheNames;
 import com.example.demo.feature.order.repository.OrderItemRepository;
 import com.example.demo.feature.product.dto.TrendingProductResponse;
 
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>The result is cached in Redis: the first (cold) call computes the
  * aggregation and stores it; subsequent calls within the TTL are served from
  * memory without touching the database. The 5-minute TTL is configured for the
- * {@link RedisConfig#TRENDING_PRODUCTS_CACHE} bucket in {@link RedisConfig}.
+ * {@link CacheNames#TRENDING_PRODUCTS} bucket in {@link com.example.demo.config.RedisConfig}.
  */
 @Slf4j
 @Service
@@ -40,7 +40,7 @@ public class TrendingProductService {
      * served from Redis. The cache key is the method name ({@code getTrendingProducts}),
      * keyed under the {@code trending-products} bucket.
      */
-    @Cacheable(cacheNames = RedisConfig.TRENDING_PRODUCTS_CACHE, key = "#root.methodName")
+    @Cacheable(cacheNames = CacheNames.TRENDING_PRODUCTS, key = "#root.methodName")
     public List<TrendingProductResponse> getTrendingProducts() {
         log.info("Cache miss — aggregating top {} trending products from PostgreSQL", TRENDING_LIMIT);
         return orderItemRepository.findTopTrending(PageRequest.of(0, TRENDING_LIMIT));

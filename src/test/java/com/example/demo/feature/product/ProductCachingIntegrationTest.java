@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.example.demo.common.bootstrap.DataSeeder;
-import com.example.demo.config.RedisConfig;
+import com.example.demo.common.cache.CacheNames;
 import com.example.demo.feature.category.entity.Category;
 import com.example.demo.feature.product.entity.Product;
 import com.example.demo.feature.product.repository.ProductRepository;
@@ -80,7 +80,7 @@ class ProductCachingIntegrationTest {
     void setUp() {
         mockMvc = webAppContextSetup(webApplicationContext).build();
 
-        Cache products = cacheManager.getCache(RedisConfig.PRODUCTS_CACHE);
+        Cache products = cacheManager.getCache(CacheNames.PRODUCTS);
         if (products != null) {
             products.evict(PRODUCT_ID);
         }

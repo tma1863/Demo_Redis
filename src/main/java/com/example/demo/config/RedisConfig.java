@@ -11,6 +11,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair;
 
+import com.example.demo.common.cache.CacheNames;
+
 /**
  * Cache wiring for the Redis-backed {@code @Cacheable} layer. Lives in the
  * dedicated {@code config} package so the caching/infrastructure plumbing stays
@@ -29,12 +31,6 @@ import org.springframework.data.redis.serializer.RedisSerializationContext.Seria
 @Configuration
 @EnableCaching
 public class RedisConfig {
-
-    /** Cache bucket for the trending-products analytics result. */
-    public static final String TRENDING_PRODUCTS_CACHE = "trending-products";
-
-    /** Cache bucket for single-product detail reads (Battleground 3). */
-    public static final String PRODUCTS_CACHE = "products";
 
     private static final Duration TRENDING_PRODUCTS_TTL = Duration.ofMinutes(5);
 
@@ -56,8 +52,8 @@ public class RedisConfig {
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaults)
-                .withCacheConfiguration(TRENDING_PRODUCTS_CACHE, trendingProducts)
-                .withCacheConfiguration(PRODUCTS_CACHE, products)
+                .withCacheConfiguration(CacheNames.TRENDING_PRODUCTS, trendingProducts)
+                .withCacheConfiguration(CacheNames.PRODUCTS, products)
                 .build();
     }
 
