@@ -19,8 +19,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * Catalog product. Central entity for the three benchmark battlegrounds
- * (trending analytics, advanced filtering, and high-concurrency detail reads).
+ * Catalog product. Central entity for the two benchmark battlegrounds
+ * (trending analytics and high-concurrency detail reads).
  */
 @Entity
 @Table(name = "products")

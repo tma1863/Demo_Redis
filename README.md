@@ -12,9 +12,6 @@ truth) and accelerated by **Redis** (cache layer):
   PostgreSQL connection (the load-test target — see the product-detail section
   below and [bench/README.md](bench/README.md)).
 
-> A third "advanced filtering" path is referenced in the code (`ProductRepository`
-> wires in `JpaSpecificationExecutor`) but is **not yet implemented**.
-
 ---
 
 ## 1. Deployment / container view

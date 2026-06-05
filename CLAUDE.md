@@ -13,7 +13,7 @@ The code is organized **feature-first** under `com.example.demo` (note the packa
 - `common/*` — shared `ApiResponse` envelope, `GlobalExceptionHandler` + `ResourceNotFoundException`, `BaseEntity` (pooled-SEQUENCE id), `DataSeeder` (bulk-loads 20 categories / 1,000 products / 50,000 order items on `ApplicationReadyEvent`), and `HibernateBatchConfig`.
 - `config/*` — `RedisConfig` (cache manager + Jackson-3 JSON value serializer).
 
-`ProductRepository` also wires in `JpaSpecificationExecutor` for a not-yet-implemented "advanced filtering" path. See [README.md](README.md) for architecture diagrams and [bench/README.md](bench/README.md) for the load test.
+See [README.md](README.md) for architecture diagrams and [bench/README.md](bench/README.md) for the load test.
 
 ## Commands
 
