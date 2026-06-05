@@ -6,7 +6,6 @@ import java.util.List;
 import com.example.demo.common.BaseEntity;
 import com.example.demo.feature.product.entity.Product;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,7 +34,7 @@ public class Category extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String slug;
 
     /**
@@ -43,8 +42,7 @@ public class Category extends BaseEntity {
      * the benchmark loads products on demand rather than eagerly hydrating the
      * whole collection.
      */
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     @Builder.Default
     private List<Product> products = new ArrayList<>();
 }
