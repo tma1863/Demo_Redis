@@ -1,7 +1,10 @@
 package com.example.demo.common.exception;
 
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -38,6 +41,22 @@ public class GlobalExceptionHandler {
         log.debug("No static resource: {}", ex.getResourcePath());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error("Not found"));
+    }
+
+    /**
+     * Bean-validation failure on a {@code @Valid @RequestBody} (e.g. a blank name
+     * or non-positive price on {@code PUT /api/products/{id}}) -> 400. Aggregates
+     * the field messages so the client sees what to fix, rather than falling
+     * through to the catch-all and being mis-reported as a 500.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
+        String details = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        log.warn("Validation failed: {}", details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(details));
     }
 
     /**

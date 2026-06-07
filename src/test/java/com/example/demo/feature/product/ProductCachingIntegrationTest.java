@@ -1,15 +1,20 @@
 package com.example.demo.feature.product;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+
+import org.springframework.http.MediaType;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -110,6 +115,53 @@ class ProductCachingIntegrationTest {
 
         // The whole point of Battleground 3: 6 reads, exactly 1 database lookup.
         verify(productRepository, times(1)).findById(PRODUCT_ID);
+    }
+
+    @Test
+    void updateRefreshesCacheSoNextReadIsServedWithoutTouchingTheDatabase() throws Exception {
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(sampleProduct()));
+        // save() echoes back the (now-mutated) managed entity, as JPA would.
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // PUT writes through to the DB once (findById + save) and, via @CachePut,
+        // stores the updated value under products::id.
+        mockMvc.perform(put("/api/products/{id}", PRODUCT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Updated Keyboard\",\"price\":199.99}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Product updated successfully"))
+                .andExpect(jsonPath("$.data.name").value("Updated Keyboard"))
+                .andExpect(jsonPath("$.data.price").value(199.99));
+
+        // Every subsequent read must be a cache hit returning the NEW value —
+        // @CachePut kept the entry warm, so the read path never re-queries.
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(get("/api/products/{id}", PRODUCT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.name").value("Updated Keyboard"))
+                    .andExpect(jsonPath("$.data.price").value(199.99));
+        }
+
+        // The whole point of @CachePut: the write read the DB once, and the 5
+        // following reads added zero further lookups.
+        verify(productRepository, times(1)).findById(PRODUCT_ID);
+        verify(productRepository, times(1)).save(any(Product.class));
+    }
+
+    @Test
+    void updateWithInvalidBodyReturns400AndNeverTouchesTheDatabase() throws Exception {
+        // Blank name + negative price both violate the request DTO constraints.
+        mockMvc.perform(put("/api/products/{id}", PRODUCT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"\",\"price\":-5}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        // Validation rejects the request at the controller boundary, so the
+        // service/repository are never invoked.
+        verify(productRepository, never()).findById(any());
+        verify(productRepository, never()).save(any());
     }
 
     @Test

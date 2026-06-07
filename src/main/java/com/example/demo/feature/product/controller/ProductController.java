@@ -4,15 +4,19 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.common.api.ApiResponse;
 import com.example.demo.feature.product.dto.ProductResponse;
+import com.example.demo.feature.product.dto.ProductUpdateRequest;
 import com.example.demo.feature.product.dto.TrendingProductResponse;
 import com.example.demo.feature.product.service.ProductService;
 import com.example.demo.feature.product.service.TrendingProductService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -38,5 +42,12 @@ public class ProductController {
     public ApiResponse<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse product = productService.getProductById(id);
         return ApiResponse.success("Product retrieved successfully", product);
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<ProductResponse> updateProduct(
+            @PathVariable Long id, @Valid @RequestBody ProductUpdateRequest request) {
+        ProductResponse product = productService.updateProduct(id, request);
+        return ApiResponse.success("Product updated successfully", product);
     }
 }
